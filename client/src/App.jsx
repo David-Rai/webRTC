@@ -1,17 +1,21 @@
-import { useState } from 'react'
-import {io} from 'socket.io-client'
+import { useState, useContext, useEffect } from 'react'
+import { SocketContext } from '../context/Socket'
 
 function App() {
-const client=io("http://localhost:1111")
+  const socket = useContext(SocketContext)
 
-client.on("connect",()=>{
-  alert("connected")
-})
+  useEffect(() => {
 
+    socket.on('connect', () => {
+      alert("connected")
+    })
+
+
+  }, [socket])
 
   return (
     <>
-    <h1>this is my app</h1>
+      <h1>this is my app</h1>
     </>
   )
 }

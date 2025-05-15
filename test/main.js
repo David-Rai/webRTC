@@ -1,3 +1,6 @@
+let stream
+let remoteStream
+let peerConnection
 
 const servers = {
     iceservers: [
@@ -9,20 +12,35 @@ const servers = {
 
 //INITIAL FACE VIDEO STREAM
 const initial = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
     document.querySelector("main #myCamera").srcObject = stream
 }
 
-let peerConnection;
+
 //CREATING THE SDP OFFER
 const createOffer = async () => {
     peerConnection = new RTCPeerConnection(servers)
 
-    const remoteStream = new MediaStream()
+    //creating the stream for the remote user
+    remoteStream = new MediaStream()
     document.querySelector("main #remoteCamera").srcObject = remoteStream
 
+    //creating the tracks
+    stream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, stream)
+    })
+
+    peerConnection.ontrack = async (e) => {
+        e.streams[0].forEach(track => {
+            remoteStream.addTrack(track)
+        })
+    }
+
     //creating the offer
-    let offer=await peerConnection.createOffer()
+    let offer = await peerConnection.createOffer()
     await peerConnection.setLocalDescription(offer)
+
+    document.querySelector("main .offer").innerText = JSON.stringify(offer)
+    console.log("Created the offer")
 }
 initial()

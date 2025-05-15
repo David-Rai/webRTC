@@ -10,8 +10,17 @@ main{
 }
 video {
     transform: scaleX(-1);
+    height: 260px;
 }
 
 .contain {
     display: flex;
+}
+.offers{
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+}
+textarea{
+    height: 100px;
 }

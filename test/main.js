@@ -1,6 +1,13 @@
 
 
-navigator.mediaDevices.getUserMedia({video:true,audio:false})
-.then(stream =>{
-    document.querySelector("video").srcObject=stream
-})
+        //INITIAL FACE VIDEO STREAM
+const initial=async ()=>{
+const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false})
+document.querySelector("main #myCamera").srcObject=stream
+
+const remoteStream=new MediaStream()
+document.querySelector("main #remoteCamera").srcObject=remoteStream
+
+}
+
+initial()

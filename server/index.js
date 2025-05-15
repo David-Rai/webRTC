@@ -16,6 +16,12 @@ const io=new Server(server,{
 
 io.on("connection",(client)=>{
     console.log("client",client.id)
+
+    client.on("joinRoom",({name,roomId})=>{
+      console.log("joined rrom by",name)
+      client.join(roomId)
+      io.to(roomId).emit("joined_message",name)
+    })
 })
 
 app.get('/', (req, res) => {

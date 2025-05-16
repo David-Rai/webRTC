@@ -21,9 +21,9 @@ const initial = async () => {
 const createOffer = async () => {
     peerConnection = new RTCPeerConnection(servers)
 
-        //creating the stream for the remote user
-        remoteStream = new MediaStream()
-        document.querySelector("main #remoteCamera").srcObject = remoteStream
+    //creating the stream for the remote user
+    remoteStream = new MediaStream()
+    document.querySelector("main #remoteCamera").srcObject = remoteStream
 
     //sending the track to the remote user
     stream.getTracks().forEach(track => {
@@ -36,11 +36,11 @@ const createOffer = async () => {
             remoteStream.addTrack(track);
         });
     };
-    
+
     //event listeners for finding the ice candidate
-    peerConnection.onicecandidate=async (event)=>{
-        if(event.candidate){
-    document.querySelector("main .offer").innerText = JSON.stringify(peerConnection.localDescription)
+    peerConnection.onicecandidate = async (event) => {
+        if (event.candidate) {
+            document.querySelector("main .offer").innerText = JSON.stringify(peerConnection.localDescription)
         }
     }
 
@@ -55,7 +55,7 @@ initial()
 
 
 //CREATING THE ANSWER
-const createAnswer=async ()=>{
+const createAnswer = async () => {
     console.log("creating the answer")
     peerConnection = new RTCPeerConnection(servers)
 
@@ -63,34 +63,48 @@ const createAnswer=async ()=>{
     remoteStream = new MediaStream()
     document.querySelector("main #remoteCamera").srcObject = remoteStream
 
-//sending the track to the remote user
-stream.getTracks().forEach(track => {
-    peerConnection.addTrack(track, stream)
-})
+    //sending the track to the remote user
+    stream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, stream)
+    })
 
-//getting  the remote track and showing into the webpage
-peerConnection.ontrack = (event) => {
-    event.streams[0].getTracks().forEach(track => {
-        remoteStream.addTrack(track);
-    });
-};
+    //getting  the remote track and showing into the webpage
+    peerConnection.ontrack = (event) => {
+        event.streams[0].getTracks().forEach(track => {
+            remoteStream.addTrack(track);
+        });
+    };
 
-//event listeners for finding the ice candidate
-peerConnection.onicecandidate=async (event)=>{
-    if(event.candidate){
-document.querySelector("main .answer").innerText = JSON.stringify(peerConnection.localDescription)
+    //event listeners for finding the ice candidate
+    peerConnection.onicecandidate = async (event) => {
+        if (event.candidate) {
+            document.querySelector("main .answer").innerText = JSON.stringify(peerConnection.localDescription)
+        }
     }
+
+    //creating ths SDP answer
+    let offer = document.querySelector("main .offer").value
+    offer = await JSON.parse(offer)
+    await peerConnection.setRemoteDescription(offer)
+
+    //creating the answer SDP
+    let answer = await peerConnection.createAnswer()
+    await peerConnection.setLocalDescription(answer)
+
+    document.querySelector("main .answer").value = JSON.stringify(answer)
+
 }
 
-//creating ths SDP answer
-let offer=document.querySelector("main .offer").value
-offer=await JSON.parse(offer)
-await peerConnection.setRemoteDescription(offer)
 
-//creating the answer SDP
-let answer=await peerConnection.createAnswer()
-await peerConnection.setLocalDescription(answer)
 
-document.querySelector("main .answer").value=JSON.stringify(answer)
+//ADDING THE ANSWER
+const addAnswer = async () => {
+    // alert("adding the answer")
+    let answer = document.querySelector("main .answer").value
+    answer = await JSON.parse(answer)
 
+    //Adding the remote description
+    if(!peerConnection.currentRemoteDescription){
+        peerConnection.setRemoteDescription(answer)
+    }
 }

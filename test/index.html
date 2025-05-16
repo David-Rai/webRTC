@@ -1,32 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<main>
-    <div class="contain">
-        <video autoplay playsinline id="myCamera"></video>
-        <video autoplay playsinline id="remoteCamera"></video>    
-    </div>
-
-    <div class="offers">
-    <button onclick="createOffer()">create offer</button>
-    <textarea class="offer"> sdp offer here</textarea>
-    </div>
-
-    <div class="offers">
-        <button onclick="createAnswer()">create answer</button>
-        <textarea class="answer">answer here</textarea>
+    <main>
+        <div class="contain">
+            <video autoplay playsinline id="myCamera"></video>
+            <video autoplay playsinline id="remoteCamera"></video>
         </div>
 
+        <div class="contain2">
+            <div class="offers">
+                <button onclick="createOffer()">create offer</button>
+                <textarea class="offer"></textarea>
+            </div>
+
+            <div class="offers">
+                <button onclick="createAnswer()">create answer</button>
+                <textarea class="answer"></textarea>
+            </div>
+
+        </div>
+        <button onclick="addAnswer()">Add Answer</button>
 
 
-</main>
+    </main>
 
-<script src="./main.js"></script>
+    <script src="./main.js"></script>
 </body>
+
 </html>

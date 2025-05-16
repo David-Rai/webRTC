@@ -10,14 +10,21 @@ main{
 }
 video {
     transform: scaleX(-1);
-    height: 260px;
+    height: 300px;
+    width: 300px;
     background-color: black;
 }
 
 .contain {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px;
 }
 .offers{
+    margin: auto;
+    justify-content: center;
     display: flex;
     flex-direction: column;
     width: 300px;

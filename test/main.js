@@ -21,26 +21,26 @@ const initial = async () => {
 const createOffer = async () => {
     peerConnection = new RTCPeerConnection(servers)
 
-    //creating the tracks
+        //creating the stream for the remote user
+        remoteStream = new MediaStream()
+        document.querySelector("main #remoteCamera").srcObject = remoteStream
+
+    //sending the track to the remote user
     stream.getTracks().forEach(track => {
         peerConnection.addTrack(track, stream)
     })
 
+    //getting  the remote track and showing into the webpage
     peerConnection.ontrack = (event) => {
         event.streams[0].getTracks().forEach(track => {
             remoteStream.addTrack(track);
         });
     };
     
-    //creating the stream for the remote user
-    remoteStream = new MediaStream()
-    document.querySelector("main #remoteCamera").srcObject = remoteStream
-
-
-    //getting the new ice candidate
-    peerConnection.onicecandidate = async (event) => {
-        if (event.candidate) {
-            document.querySelector("main .offer").innerText = JSON.stringify(peerConnection.localDescription)
+    //event listeners for finding the ice candidate
+    peerConnection.onicecandidate=async (event)=>{
+        if(event.candidate){
+    document.querySelector("main .offer").innerText = JSON.stringify(peerConnection.localDescription)
         }
     }
 
@@ -49,7 +49,7 @@ const createOffer = async () => {
     await peerConnection.setLocalDescription(offer)
 
     document.querySelector("main .offer").innerText = JSON.stringify(offer)
-    console.log("Created the offer")
+    console.log("offer created..")
 }
 initial()
 

@@ -3,7 +3,7 @@ let remoteStream
 let peerConnection
 
 const servers = {
-    iceservers: [
+    iceServers: [
         {
             urls: ['stun:stun.l.google.com:19302']
         }
@@ -21,19 +21,27 @@ const initial = async () => {
 const createOffer = async () => {
     peerConnection = new RTCPeerConnection(servers)
 
-    //creating the stream for the remote user
-    remoteStream = new MediaStream()
-    document.querySelector("main #remoteCamera").srcObject = remoteStream
-
     //creating the tracks
     stream.getTracks().forEach(track => {
         peerConnection.addTrack(track, stream)
     })
 
-    peerConnection.ontrack = async (e) => {
-        e.streams[0].forEach(track => {
-            remoteStream.addTrack(track)
-        })
+    peerConnection.ontrack = (event) => {
+        event.streams[0].getTracks().forEach(track => {
+            remoteStream.addTrack(track);
+        });
+    };
+    
+    //creating the stream for the remote user
+    remoteStream = new MediaStream()
+    document.querySelector("main #remoteCamera").srcObject = remoteStream
+
+
+    //getting the new ice candidate
+    peerConnection.onicecandidate = async (event) => {
+        if (event.candidate) {
+            document.querySelector("main .offer").innerText = JSON.stringify(peerConnection.localDescription)
+        }
     }
 
     //creating the offer
@@ -44,3 +52,9 @@ const createOffer = async () => {
     console.log("Created the offer")
 }
 initial()
+
+
+//CREATING THE ANSWER
+const createAnswer=()=>{
+    alert("Creating the answer")
+}

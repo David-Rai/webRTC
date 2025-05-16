@@ -11,6 +11,7 @@ main{
 video {
     transform: scaleX(-1);
     height: 260px;
+    background-color: black;
 }
 
 .contain {

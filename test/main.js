@@ -45,11 +45,11 @@ const addTracks = () => {
 }
 
 //Adding the ICE candidate
-const addICE=(field)=>{
-    peerConnection.onicecandidate=async event=>{
-    if(event.candidate){
-        document.querySelector(field).innerText = JSON.stringify(peerConnection.localDescription)
-    }
+const addICE = (field) => {
+    peerConnection.onicecandidate = async event => {
+        if (event.candidate) {
+            document.querySelector(field).innerText = JSON.stringify(peerConnection.localDescription)
+        }
     }
 }
 
@@ -65,7 +65,6 @@ const createOffer = async () => {
     await peerConnection.setLocalDescription(offer)
 
     document.querySelector("main .offer").innerText = JSON.stringify(offer)
-    console.log("offer created..")
 }
 
 initial()
@@ -80,6 +79,9 @@ const createAnswer = async () => {
 
     //creating ths SDP answer
     let offer = document.querySelector("main .offer").value
+    if (offer === "") {
+        return alert("Add the offer from peer")
+    }
     offer = await JSON.parse(offer)
     await peerConnection.setRemoteDescription(offer)
 
@@ -88,15 +90,18 @@ const createAnswer = async () => {
     await peerConnection.setLocalDescription(answer)
 
     document.querySelector("main .answer").value = JSON.stringify(answer)
-
 }
 
 
 
 //ADDING THE ANSWER
 const addAnswer = async () => {
-    // alert("adding the answer")
+
+    //getting the answer
     let answer = document.querySelector("main .answer").value
+    if (answer === "") {
+        return alert("Add answer from another peer")
+    }
     answer = await JSON.parse(answer)
 
     //Adding the remote description

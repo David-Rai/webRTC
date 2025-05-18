@@ -1,8 +1,10 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 import { SocketContext } from '../context/Socket'
+import { useNavigate } from 'react-router-dom'
 
 function App() {
   const socket = useContext(SocketContext)
+  const navigate = useNavigate()
   const nameRef = useRef(null)
   const roomRef = useRef(null)
 
@@ -13,9 +15,17 @@ function App() {
       console.log("connected ", socket.id)
     })
 
-    socket.on("joined_message",name=>{
-      console.log(`${name} just joined the room`)
+    //room created
+    socket.on("created_room", ({ message, status, roomId }) => {
+        navigate(`/room/${roomId}`)
     })
+
+
+    //joined the room
+    socket.on("joined_room",({message,name,roomId})=>{
+      navigate(`/room/${roomId}`)
+    })
+
   }, [socket])
 
   //Handling the room join
@@ -23,16 +33,20 @@ function App() {
     const name = nameRef.current.value
     const roomId = roomRef.current.value
 
+    if (name.trim() === "" || roomId.trim() === "") {
+      return alert("Field are required")
+    }
+
     socket.emit("joinRoom", { name, roomId })
 
-    //clearing the input field
-    nameRef.current.value = ""
-    roomRef.current.value = ""
+    // //clearing the input field
+    // nameRef.current.value = ""
+    // roomRef.current.value = ""
 
   }
 
   return (
-    <main className='h-screen w-full flex items-center justify-center gap-3 flex-col'>
+    <main className='h-screen w-full flex items-center justify-center gap-3 flex-col bg-primary_bg'>
       <input type="text" placeholder='name' className='border-[1px] border-black' ref={nameRef} />
       <input type="text" placeholder='roomId' className='border-[1px] border-black' ref={roomRef} />
       <button className='bg-blue-400 px-4' onClick={handleJoin}>Join , create room</button>

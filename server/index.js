@@ -50,6 +50,7 @@ io.on("connection", (client) => {
 
   //Getting the SDP answer
   client.on("answer",({answer,roomId})=>{
+    console.log(roomId)
     console.log(answer)
    client.to(roomId).emit("send_answer",answer)
   }) 

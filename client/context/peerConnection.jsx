@@ -1,6 +1,7 @@
 import { createContext } from "react";
+import React from "react";
 
-export const peerContext = createContext(null)
+export const PeerContext = createContext(null)
 
 //STUN servers
 const servers = {
@@ -12,14 +13,14 @@ const servers = {
 }
 
 //peer provider
-export const peerProvider =({ children }) => {
+export const PeerProvider =({ children }) => {
     const peerConnection = React.useMemo(() => new RTCPeerConnection(servers), []);
 
     return (
-        <peerContext.Provider value={peerConnection} >
+        <PeerContext.Provider value={peerConnection} >
             {
                 children
             }
-        </peerContext.Provider >
+        </PeerContext.Provider >
     )
 }

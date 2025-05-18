@@ -2,14 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { SocketContext } from "../../context/Socket";
 import { useContext } from "react";
 import { useParams } from 'react-router-dom'
+import { PeerContext } from "../../context/peerConnection";
 
 const Room = () => {
     const socket = useContext(SocketContext)
+    const peerConnection=useContext(PeerContext)
     const { id } = useParams()
     const streamRef = useRef(null)
     const remoteStreamRef = useRef(null)
     const [stream, setStream] = useState(null)
-    const [remoteStream, setRemoteStream] = useState(null)
+    // const [remoteStream, setRemoteStream] = useState(null)
     const [isRemote, setIsRemote] = useState(false)
 
 
@@ -24,14 +26,14 @@ const Room = () => {
 
     }, [])
 
-    //STUN servers
-    const servers = {
-        iceservers: [
-            {
-                urls: ['stun:stun.l.google.com:19302']
-            }
-        ]
-    }
+    // //STUN servers
+    // const servers = {
+    //     iceservers: [
+    //         {
+    //             urls: ['stun:stun.l.google.com:19302']
+    //         }
+    //     ]
+    // }
 
     //READY TO GOO FROM SDP
     socket.on("ready", (message) => {
@@ -42,7 +44,7 @@ const Room = () => {
     socket.on("send_offer", async (offer) => {
         console.log("offer recieved")
         console.log(offer)
-        const peerConnection = new RTCPeerConnection(servers)
+        // const peerConnection = new RTCPeerConnection(servers)
         await peerConnection.setRemoteDescription(offer)
 
         const remote = new MediaStream()
@@ -84,7 +86,7 @@ const Room = () => {
 
     //Creating the offer
     const createOffer = async () => {
-        const peerConnection = new RTCPeerConnection(servers)
+        // const peerConnection = new RTCPeerConnection(servers)
 
         const remote = new MediaStream()
 

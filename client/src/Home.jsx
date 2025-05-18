@@ -30,6 +30,7 @@ function App() {
     socket.on("full", message => {
       alert(message)
     })
+
   }, [socket])
 
   //Handling the room join

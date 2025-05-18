@@ -34,6 +34,7 @@ io.on("connection", (client) => {
       if (numClients === 1) {
         client.join(roomId)
         client.emit("joined_room", { message: "joined room", name,roomId })
+        client.to(roomId).emit("ready","lets goo")
         console.log("joined the room", roomId)
       } else {
         console.log("room fulled")

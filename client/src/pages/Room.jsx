@@ -6,14 +6,15 @@ import { PeerContext } from "../../context/peerConnection";
 
 const Room = () => {
     const socket = useContext(SocketContext)
-    const peerConnection=useContext(PeerContext)
+    const peerConnection = useContext(PeerContext)
     const { id } = useParams()
     const streamRef = useRef(null)
     const remoteStreamRef = useRef(null)
     const [stream, setStream] = useState(null)
     // const [remoteStream, setRemoteStream] = useState(null)
     const [isRemote, setIsRemote] = useState(false)
-
+    const offerState = useRef(false)
+    const answerState=useRef(false)
 
     //Getting the user stream at first
     useEffect(() => {
@@ -26,15 +27,6 @@ const Room = () => {
 
     }, [])
 
-    // //STUN servers
-    // const servers = {
-    //     iceservers: [
-    //         {
-    //             urls: ['stun:stun.l.google.com:19302']
-    //         }
-    //     ]
-    // }
-
     //READY TO GOO FROM SDP
     socket.on("ready", (message) => {
         createOffer()
@@ -42,9 +34,12 @@ const Room = () => {
 
     //Getting the offer from the one peer and generating the answer
     socket.on("send_offer", async (offer) => {
+        if (offerState.current) return
+        offerState.current=true
+
         console.log("offer recieved")
         console.log(offer)
-        // const peerConnection = new RTCPeerConnection(servers)
+
         await peerConnection.setRemoteDescription(offer)
 
         const remote = new MediaStream()
@@ -66,28 +61,29 @@ const Room = () => {
         //ICE candidate generation and sending to the remote user
         peerConnection.onicecandidate = async (e) => {
             if (e.candidate) {
-                socket.emit("answer", { answer: peerConnection.remoteDescription, roomId: id })
+                socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
             }
         }
 
         //Generating the answer SDP
         const answer = await peerConnection.createAnswer()
-        await peerConnection.setLocalDescription(answer)   
+        await peerConnection.setLocalDescription(answer)
 
     })
 
     //Getting the answer from the remote peer
-    socket.on("send_answer", (answer) => {
+    socket.on("send_answer", async (answer) => {
+        if(answerState.current) return
+        answerState.current=true
+        
         console.log("answer received ")
         console.log(answer)
-        peerConnection.setRemoteDescription(answer)
+        await peerConnection.setRemoteDescription(answer)
     })
 
 
     //Creating the offer
     const createOffer = async () => {
-        // const peerConnection = new RTCPeerConnection(servers)
-
         const remote = new MediaStream()
 
         remoteStreamRef.current.srcObject = remote

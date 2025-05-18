@@ -38,7 +38,7 @@ const Room = () => {
         createOffer()
     })
 
-    //Getting the offer from the one peer
+    //Getting the offer from the one peer and generating the answer
     socket.on("send_offer", async (offer) => {
         console.log("offer recieved")
         console.log(offer)
@@ -53,7 +53,6 @@ const Room = () => {
             stream.getTracks().forEach(track => {//add video,audio to peerConnection
                 peerConnection.addTrack(track, stream)
             })
-
         }
 
         peerConnection.ontrack = async (event) => {
@@ -71,8 +70,15 @@ const Room = () => {
 
         //Generating the answer SDP
         const answer = await peerConnection.createAnswer()
-        await peerConnection.setRemoteDescription(answer)
+        await peerConnection.setLocalDescription(answer)   
 
+    })
+
+    //Getting the answer from the remote peer
+    socket.on("send_answer", (answer) => {
+        console.log("answer received ")
+        console.log(answer)
+        peerConnection.setRemoteDescription(answer)
     })
 
 
@@ -84,9 +90,11 @@ const Room = () => {
 
         remoteStreamRef.current.srcObject = remote
 
-        stream.getTracks().forEach(track => {//add video,audio to peerConnection
-            peerConnection.addTrack(track, stream)
-        })
+        if (stream) {
+            stream.getTracks().forEach(track => {//add video,audio to peerConnection
+                peerConnection.addTrack(track, stream)
+            })
+        }
 
         peerConnection.ontrack = async (event) => {
             event.streams[0].forEach(track => {
@@ -103,8 +111,6 @@ const Room = () => {
 
         const offer = await peerConnection.createOffer()
         await peerConnection.setLocalDescription(offer)
-
-
     }
 
     return (

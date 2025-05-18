@@ -33,8 +33,8 @@ io.on("connection", (client) => {
     } else
       if (numClients === 1) {
         client.join(roomId)
-        client.emit("joined_room", { message: "joined room", name,roomId })
-        client.to(roomId).emit("ready","lets goo")
+        client.emit("joined_room", { message: "joined room", name, roomId })
+        client.to(roomId).emit("ready", "lets goo")
         console.log("joined the room", roomId)
       } else {
         console.log("room fulled")
@@ -43,7 +43,17 @@ io.on("connection", (client) => {
 
   })
 
-  //Request for the offer SDP
+  //Getting the SDP offer
+  client.on("offer",({offer,roomId})=>{
+  client.to(roomId).emit("send_offer",offer)
+  })
+
+  //Getting the SDP answer
+  client.on("answer",({answer,roomId})=>{
+    console.log(answer)
+   client.to(roomId).emit("send_answer",answer)
+  }) 
+
 })
 
 //EXPRESS ROUTING

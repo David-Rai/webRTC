@@ -43,11 +43,6 @@ function App() {
     }
 
     socket.emit("joinRoom", { name, roomId })
-
-    // //clearing the input field
-    // nameRef.current.value = ""
-    // roomRef.current.value = ""
-
   }
 
   return (

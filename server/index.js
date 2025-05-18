@@ -45,13 +45,13 @@ io.on("connection", (client) => {
 
   //Getting the SDP offer
   client.on("offer",({offer,roomId})=>{
+    console.log("offered")
   client.to(roomId).emit("send_offer",offer)
   })
 
   //Getting the SDP answer
   client.on("answer",({answer,roomId})=>{
-    console.log(roomId)
-    console.log(answer)
+    console.log("answered")
    client.to(roomId).emit("send_answer",answer)
   }) 
 

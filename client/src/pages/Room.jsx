@@ -11,76 +11,76 @@ const Room = () => {
     const streamRef = useRef(null)
     const remoteStreamRef = useRef(null)
     const [stream, setStream] = useState(null)
-    // const [remoteStream, setRemoteStream] = useState(null)
     const [isRemote, setIsRemote] = useState(false)
     const offerState = useRef(false)
-    const answerState=useRef(false)
+    const answerState = useRef(false)
 
     //Getting the user stream at first
     useEffect(() => {
+        offerState.current = false
+        answerState.current = false
+
         async function setMedias() {
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             streamRef.current.srcObject = currentStream
             setStream(currentStream)
         }
         setMedias()
-
     }, [])
+    
+        //READY TO GOO FROM SDP
+        socket.on("ready", (message) => {
+            createOffer()
+        })
 
-    //READY TO GOO FROM SDP
-    socket.on("ready", (message) => {
-        createOffer()
-    })
+        //Getting the offer from the one peer and generating the answer
+        socket.on("send_offer", async (offer) => {
+            if (offerState.current) return
+            offerState.current = true
 
-    //Getting the offer from the one peer and generating the answer
-    socket.on("send_offer", async (offer) => {
-        if (offerState.current) return
-        offerState.current=true
+            console.log("offer recieved")
+            console.log(offer)
 
-        console.log("offer recieved")
-        console.log(offer)
+            await peerConnection.setRemoteDescription(offer)
 
-        await peerConnection.setRemoteDescription(offer)
+            const remote = new MediaStream()
 
-        const remote = new MediaStream()
+            remoteStreamRef.current.srcObject = remote
 
-        remoteStreamRef.current.srcObject = remote
-
-        if (stream) {
-            stream.getTracks().forEach(track => {//add video,audio to peerConnection
-                peerConnection.addTrack(track, stream)
-            })
-        }
-
-        peerConnection.ontrack = async (event) => {
-            event.streams[0].forEach(track => {
-                remoteStreamRef.current.addTrack(track)
-            })
-        }
-
-        //ICE candidate generation and sending to the remote user
-        peerConnection.onicecandidate = async (e) => {
-            if (e.candidate) {
-                socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
+            if (stream) {
+                stream.getTracks().forEach(track => {//add video,audio to peerConnection
+                    peerConnection.addTrack(track, stream)
+                })
             }
-        }
 
-        //Generating the answer SDP
-        const answer = await peerConnection.createAnswer()
-        await peerConnection.setLocalDescription(answer)
+            peerConnection.ontrack = async (event) => {
+                event.streams[0].forEach(track => {
+                    remoteStreamRef.current.addTrack(track)
+                })
+            }
 
-    })
+            //ICE candidate generation and sending to the remote user
+            peerConnection.onicecandidate = async (e) => {
+                if (e.candidate) {
+                    socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
+                }
+            }
 
-    //Getting the answer from the remote peer
-    socket.on("send_answer", async (answer) => {
-        if(answerState.current) return
-        answerState.current=true
-        
-        console.log("answer received ")
-        console.log(answer)
-        await peerConnection.setRemoteDescription(answer)
-    })
+            //Generating the answer SDP
+            const answer = await peerConnection.createAnswer()
+            await peerConnection.setLocalDescription(answer)
 
+        })
+
+        //Getting the answer from the remote peer
+        socket.on("send_answer", async (answer) => {
+            if (answerState.current) return
+            answerState.current = true
+
+            console.log("answer received ")
+            console.log(answer)
+            await peerConnection.setRemoteDescription(answer)
+        })
 
     //Creating the offer
     const createOffer = async () => {

@@ -16,18 +16,18 @@ function App() {
     })
 
     //room created
-    socket.on("created_room", ({ message, status, roomId }) => {
-        navigate(`/room/${roomId}`)
+    socket.on("created_room", ({ message, status , roomId }) => {
+      navigate(`/room/${roomId}`)
     })
 
 
     //joined the room
-    socket.on("joined_room",({message,name,roomId})=>{
+    socket.on("joined_room", ({ message, name, roomId }) => {
       navigate(`/room/${roomId}`)
     })
 
     //if Room is full
-    socket.on("full",message=>{
+    socket.on("full", message => {
       alert(message)
     })
   }, [socket])
@@ -53,10 +53,10 @@ function App() {
     <main className='h-screen w-full flex items-center justify-center gap-3 flex-col bg-primary_bg'>
       <input type="text" placeholder='name' className='input' ref={nameRef} />
       <input type="text" placeholder='roomId' className='input' ref={roomRef} />
-<div className='flex gap-4'>
-<button className='bg-blue-400 btn' onClick={handleJoin}>Join Room</button>
-<button className='bg-[#18BA69] btn ' onClick={handleJoin}>Create Room</button>
-</div>
+      <div className='flex gap-4'>
+        <button className='bg-blue-400 btn' onClick={handleJoin}>Join Room</button>
+        <button className='bg-[#18BA69] btn ' onClick={handleJoin}>Create Room</button>
+      </div>
     </main>
   )
 }

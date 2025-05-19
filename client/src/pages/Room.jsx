@@ -10,7 +10,6 @@ const Room = () => {
     const { id } = useParams()
     const streamRef = useRef(null)
     const remoteStreamRef = useRef(null)
-    // const [stream, setStream] = useState(null)
     const [isRemote, setIsRemote] = useState(false)
     const offerState = useRef(false)
     const answerState = useRef(false)
@@ -41,7 +40,6 @@ const Room = () => {
         async function setMedias() {
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             streamRef.current.srcObject = currentStream
-            // setStream(currentStream)
         }
         setMedias()
     }, [])
@@ -60,10 +58,6 @@ const Room = () => {
         console.log(offer)
 
         await peerConnection.setRemoteDescription(offer)
-
-        const remote = new MediaStream()
-
-        remoteStreamRef.current.srcObject = remote
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
         if (stream) {
@@ -84,9 +78,10 @@ const Room = () => {
         }
 
         peerConnection.ontrack = async (e) => {
-            e.streams[0].getTracks().forEach(track => {
-                remoteStreamRef.current.addTrack(track)
-            })
+            // if(e.streams[0]){
+                console.log("done")
+                remoteStreamRef.current.srcObject = e.streams[0];
+            // }
         }
 
 
@@ -110,6 +105,7 @@ const Room = () => {
 
         console.log("answer received ")
         console.log(answer)
+
         await peerConnection.setRemoteDescription(answer)
     })
 
@@ -140,9 +136,10 @@ const Room = () => {
         }
 
         peerConnection.ontrack = async (e) => {
-            e.streams[0].getTracks().forEach(track => {
-                remoteStreamRef.current.addTrack(track)
-            })
+            if(e.streams[0]){
+                console.log("done")
+                remoteStreamRef.current.srcObject = e.streams[0];
+            }
         }
 
         //ICE candidate generation and sending to the remote user

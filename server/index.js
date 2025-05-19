@@ -57,7 +57,7 @@ io.on("connection", (client) => {
 
   //Getting the new ice Candidate
   client.on("ice",({candidate,roomId})=>{
-    console.log("ice",candidate)
+    // console.log("ice",candidate)
     client.to(roomId).emit("ice",candidate)
   })
 

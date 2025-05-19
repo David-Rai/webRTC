@@ -20,6 +20,19 @@ const Room = () => {
         offerState.current = false
         answerState.current = false
 
+        //Adding the new ICE Candidate
+        socket.on("ice", async (candidate) => {
+            try {
+                if (candidate) {
+                    await peerConnection.addIceCandidate(candidate);
+                    console.log("ICE candidate added successfully");
+                }
+            } catch (error) {
+                console.error("Error adding received ICE candidate:", error);
+            }
+        });
+
+
         peerConnection.onconnectionstatechange = () => {
             console.log("Connection state:", peerConnection.connectionState);
 
@@ -60,6 +73,7 @@ const Room = () => {
         await peerConnection.setRemoteDescription(offer)
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+
         if (stream) {
             console.log(stream)
             stream.getTracks().forEach(track => {//add video,audio to peerConnection
@@ -78,25 +92,26 @@ const Room = () => {
         }
 
         peerConnection.ontrack = async (e) => {
-            // if(e.streams[0]){
+            if (e.streams[0]) {
                 console.log("done")
                 remoteStreamRef.current.srcObject = e.streams[0];
-            // }
+            }
         }
-
 
         //ICE candidate generation and sending to the remote user
         peerConnection.onicecandidate = async (e) => {
             if (e.candidate) {
-                socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
+                socket.emit("ice", { candidate: e.candidate, roomId: id })
             }
         }
 
         //Generating the answer SDP
         const answer = await peerConnection.createAnswer()
         await peerConnection.setLocalDescription(answer)
+        socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
 
     })
+
 
     //Getting the answer from the remote peer
     socket.on("send_answer", async (answer) => {
@@ -111,12 +126,7 @@ const Room = () => {
 
     //Creating the offer
     const createOffer = async () => {
-        const remote = new MediaStream()
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-
-
-        remoteStreamRef.current.srcObject = remote
-
 
         if (stream) {
             console.log(stream)
@@ -136,7 +146,7 @@ const Room = () => {
         }
 
         peerConnection.ontrack = async (e) => {
-            if(e.streams[0]){
+            if (e.streams[0]) {
                 console.log("done")
                 remoteStreamRef.current.srcObject = e.streams[0];
             }
@@ -145,18 +155,20 @@ const Room = () => {
         //ICE candidate generation and sending to the remote user
         peerConnection.onicecandidate = async (e) => {
             if (e.candidate) {
-                socket.emit("offer", { offer: peerConnection.localDescription, roomId: id })
+                socket.emit("ice", { candidate: e.candidate, roomId: id })
             }
         }
 
         const offer = await peerConnection.createOffer()
         await peerConnection.setLocalDescription(offer)
+        socket.emit("offer", { offer, roomId: id })
+
     }
 
     return (
         <>
             <main className="h-screen w-full bg-primary_bg">
-                <video autoPlay playsInline ref={remoteStreamRef} className="h-[100px] w-[100px] absolute bg-slate-700"></video>
+                <video autoPlay playsInline ref={remoteStreamRef} className="h-[100px] w-[100px] absolute bg-slate-700 z-50"></video>
                 <video autoPlay playsInline ref={streamRef} className={` scale-x-[-1] ${isRemote ? "" : "h-screen w-full"}`}></video>
             </main>
         </>

@@ -70,7 +70,6 @@ const Room = () => {
         console.log("offer recieved")
         console.log(offer)
 
-        await peerConnection.setRemoteDescription(offer)
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
 
@@ -105,6 +104,9 @@ const Room = () => {
             }
         }
 
+        await peerConnection.setRemoteDescription(offer)
+
+        
         //Generating the answer SDP
         const answer = await peerConnection.createAnswer()
         await peerConnection.setLocalDescription(answer)

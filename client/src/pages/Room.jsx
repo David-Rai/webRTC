@@ -10,92 +10,137 @@ const Room = () => {
     const { id } = useParams()
     const streamRef = useRef(null)
     const remoteStreamRef = useRef(null)
-    const [stream, setStream] = useState(null)
+    // const [stream, setStream] = useState(null)
     const [isRemote, setIsRemote] = useState(false)
     const offerState = useRef(false)
     const answerState = useRef(false)
+
 
     //Getting the user stream at first
     useEffect(() => {
         offerState.current = false
         answerState.current = false
 
+        peerConnection.onconnectionstatechange = () => {
+            console.log("Connection state:", peerConnection.connectionState);
+
+            switch (peerConnection.connectionState) {
+                case "connected":
+                    console.log("✅ Peers are connected");
+                    break;
+                case "disconnected":
+                case "failed":
+                    console.log("⚠️ Peers are disconnected or connection failed");
+                    break;
+                case "closed":
+                    console.log("❌ Connection closed");
+                    break;
+            }
+        }
+
         async function setMedias() {
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             streamRef.current.srcObject = currentStream
-            setStream(currentStream)
+            // setStream(currentStream)
         }
         setMedias()
     }, [])
-    
-        //READY TO GOO FROM SDP
-        socket.on("ready", (message) => {
-            createOffer()
-        })
 
-        //Getting the offer from the one peer and generating the answer
-        socket.on("send_offer", async (offer) => {
-            if (offerState.current) return
-            offerState.current = true
+    //READY TO GOO FROM SDP
+    socket.on("ready", (message) => {
+        createOffer()
+    })
 
-            console.log("offer recieved")
-            console.log(offer)
+    //Getting the offer from the one peer and generating the answer
+    socket.on("send_offer", async (offer) => {
+        if (offerState.current) return
+        offerState.current = true
 
-            await peerConnection.setRemoteDescription(offer)
+        console.log("offer recieved")
+        console.log(offer)
 
-            const remote = new MediaStream()
+        await peerConnection.setRemoteDescription(offer)
 
-            remoteStreamRef.current.srcObject = remote
-
-            if (stream) {
-                stream.getTracks().forEach(track => {//add video,audio to peerConnection
-                    peerConnection.addTrack(track, stream)
-                })
-            }
-
-            peerConnection.ontrack = async (event) => {
-                event.streams[0].forEach(track => {
-                    remoteStreamRef.current.addTrack(track)
-                })
-            }
-
-            //ICE candidate generation and sending to the remote user
-            peerConnection.onicecandidate = async (e) => {
-                if (e.candidate) {
-                    socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
-                }
-            }
-
-            //Generating the answer SDP
-            const answer = await peerConnection.createAnswer()
-            await peerConnection.setLocalDescription(answer)
-
-        })
-
-        //Getting the answer from the remote peer
-        socket.on("send_answer", async (answer) => {
-            if (answerState.current) return
-            answerState.current = true
-
-            console.log("answer received ")
-            console.log(answer)
-            await peerConnection.setRemoteDescription(answer)
-        })
-
-    //Creating the offer
-    const createOffer = async () => {
         const remote = new MediaStream()
 
         remoteStreamRef.current.srcObject = remote
 
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
         if (stream) {
+            console.log(stream)
             stream.getTracks().forEach(track => {//add video,audio to peerConnection
                 peerConnection.addTrack(track, stream)
             })
+        } else {
+            console.log("no stream")
+            let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            streamRef.current.srcObject = currentStream
+
+            currentStream.getTracks().forEach(track => {//add video,audio to peerConnection
+                peerConnection.addTrack(track, currentStream)
+            })
+
+            console.log(currentStream)
         }
 
-        peerConnection.ontrack = async (event) => {
-            event.streams[0].forEach(track => {
+        peerConnection.ontrack = async (e) => {
+            e.streams[0].getTracks().forEach(track => {
+                remoteStreamRef.current.addTrack(track)
+            })
+        }
+
+
+        //ICE candidate generation and sending to the remote user
+        peerConnection.onicecandidate = async (e) => {
+            if (e.candidate) {
+                socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
+            }
+        }
+
+        //Generating the answer SDP
+        const answer = await peerConnection.createAnswer()
+        await peerConnection.setLocalDescription(answer)
+
+    })
+
+    //Getting the answer from the remote peer
+    socket.on("send_answer", async (answer) => {
+        if (answerState.current) return
+        answerState.current = true
+
+        console.log("answer received ")
+        console.log(answer)
+        await peerConnection.setRemoteDescription(answer)
+    })
+
+    //Creating the offer
+    const createOffer = async () => {
+        const remote = new MediaStream()
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+
+
+        remoteStreamRef.current.srcObject = remote
+
+
+        if (stream) {
+            console.log(stream)
+            stream.getTracks().forEach(track => {//add video,audio to peerConnection
+                peerConnection.addTrack(track, stream)
+            })
+        } else {
+            console.log("no stream")
+            let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            streamRef.current.srcObject = currentStream
+
+            currentStream.getTracks().forEach(track => {//add video,audio to peerConnection
+                peerConnection.addTrack(track, currentStream)
+            })
+
+            console.log(currentStream)
+        }
+
+        peerConnection.ontrack = async (e) => {
+            e.streams[0].getTracks().forEach(track => {
                 remoteStreamRef.current.addTrack(track)
             })
         }

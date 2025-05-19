@@ -13,6 +13,7 @@ const Room = () => {
     const [isRemote, setIsRemote] = useState(false)
     const offerState = useRef(false)
     const answerState = useRef(false)
+    const [ice, setIce] = useState([])
 
 
     //Getting the user stream at first
@@ -20,17 +21,22 @@ const Room = () => {
         offerState.current = false
         answerState.current = false
 
-        //Adding the new ICE Candidate
-        socket.on("ice", async (candidate) => {
-            try {
-                if (candidate) {
-                    await peerConnection.addIceCandidate(candidate);
-                    console.log("ICE candidate added successfully");
-                }
-            } catch (error) {
-                console.error("Error adding received ICE candidate:", error);
+// Adding the new ICE Candidate
+socket.on("ice", async (candidate) => {
+    try {
+        if (candidate) {
+            if (!peerConnection.remoteDescription) {
+                setIce(prev => [...prev, candidate]);
+                console.log("Remote description not set yet, candidate saved");
+                // return;
             }
-        });
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            console.log("ICE candidate added successfully");
+        }
+    } catch (error) {
+        console.error("Error adding received ICE candidate:", error);
+    }
+});
 
 
         peerConnection.onconnectionstatechange = () => {
@@ -68,18 +74,16 @@ const Room = () => {
         offerState.current = true
 
         console.log("offer recieved")
-        console.log(offer)
+        // console.log(offer)
 
 
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
 
         if (stream) {
-            console.log(stream)
             stream.getTracks().forEach(track => {//add video,audio to peerConnection
                 peerConnection.addTrack(track, stream)
             })
         } else {
-            console.log("no stream")
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             streamRef.current.srcObject = currentStream
 
@@ -87,7 +91,6 @@ const Room = () => {
                 peerConnection.addTrack(track, currentStream)
             })
 
-            console.log(currentStream)
         }
 
         peerConnection.ontrack = async (e) => {
@@ -105,8 +108,13 @@ const Room = () => {
         }
 
         await peerConnection.setRemoteDescription(offer)
+        ice.map(candidate => {
+            peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+                .catch(e => console.error("Failed to add ICE candidate:", e));
+        });
 
-        
+
+
         //Generating the answer SDP
         const answer = await peerConnection.createAnswer()
         await peerConnection.setLocalDescription(answer)
@@ -121,9 +129,14 @@ const Room = () => {
         answerState.current = true
 
         console.log("answer received ")
-        console.log(answer)
+        // console.log(answer)
 
         await peerConnection.setRemoteDescription(answer)
+        ice.map(candidate => {
+            peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+                .catch(e => console.error("Failed to add ICE candidate:", e));
+        });
+
     })
 
     //Creating the offer
@@ -131,12 +144,10 @@ const Room = () => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
 
         if (stream) {
-            console.log(stream)
             stream.getTracks().forEach(track => {//add video,audio to peerConnection
                 peerConnection.addTrack(track, stream)
             })
         } else {
-            console.log("no stream")
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             streamRef.current.srcObject = currentStream
 
@@ -144,7 +155,6 @@ const Room = () => {
                 peerConnection.addTrack(track, currentStream)
             })
 
-            console.log(currentStream)
         }
 
         peerConnection.ontrack = async (e) => {
@@ -170,8 +180,8 @@ const Room = () => {
     return (
         <>
             <main className="h-screen w-full bg-primary_bg">
-                <video autoPlay playsInline ref={remoteStreamRef} className="h-[100px] w-[100px] absolute bg-slate-700 z-50"></video>
-                <video autoPlay playsInline ref={streamRef} className={` scale-x-[-1] ${isRemote ? "" : "h-screen w-full"}`}></video>
+                <video autoPlay playsInline ref={remoteStreamRef} className="h-screen w-full"></video>
+                <video autoPlay playsInline ref={streamRef} className="h-[200px] z-20 w-[200px] absolute top-2 left-2 rounded-md"></video>
             </main>
         </>
     )

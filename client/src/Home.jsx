@@ -11,6 +11,9 @@ function App() {
   //establishing the socket connection
   useEffect(() => {
 
+    nameRef.current.value="ram"
+    roomRef.current.value="11111"
+
     socket.on('connect', () => {
       console.log("connected ", socket.id)
     })

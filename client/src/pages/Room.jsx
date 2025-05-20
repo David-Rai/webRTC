@@ -106,6 +106,7 @@ const Room = () => {
         await peerConnection.setRemoteDescription(answer)
         await addICE()
     }
+    
     //Getting the user stream at first
     useEffect(() => {
         offerState.current = false

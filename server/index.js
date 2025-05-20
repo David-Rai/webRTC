@@ -19,7 +19,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "https://david-webrtc.netlify.app", "https://david-webRTC.netlify.app/",
-      , "http://localhost:5173/", "http://localhost:5173"
+      , "http://localhost:5173/", "http://localhost:5173","https://david-rai.github.io/webRTC/keep-alive/"
     ]
   }
 })

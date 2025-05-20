@@ -14,6 +14,24 @@ const Room = () => {
     const answerState = useRef(false)
     const [ice, setIce] = useState([])
 
+
+    //Add the ICE Candidate when remoteDescription is set
+    useEffect(() => {
+            if (
+                peerConnection.remoteDescription &&
+                peerConnection.remoteDescription.type &&
+                ice.length > 0
+            ) {
+                console.log("📥 Flushing buffered ICE candidates");
+                addICE();
+                setIce([]); // Clear after adding
+            }
+    
+        // return () => clearInterval(interval);
+    }, [ice, peerConnection.remoteDescription]);
+
+    
+    //Adding the remote track to the peer instance
     const addShit = async () => {
         console.log("adding the track")
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
@@ -26,7 +44,6 @@ const Room = () => {
 
         peerConnection.ontrack = async (e) => {
             if (e.streams[0]) {
-                console.log("done")
                 remoteStreamRef.current.srcObject = e.streams[0];
             }
         }
@@ -39,29 +56,63 @@ const Room = () => {
         }
 
     }
+    //Handling the candidate
+    const handleICE = async (candidate) => {
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (error) {
+            setIce(prev => [...prev, candidate]);
+        }
+    };
+    
+    //Adding the ICE candidate
+    const addICE=async ()=>{
+        for (const candidate of ice) {
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                console.log("🧊 Buffered ICE candidate added");
+            } catch (e) {
+                console.error("❌ Error adding ICE:", e);
+            }
+        }
+        
+    }
 
+    //Handling on getting the offer
+    const handleOffer=async (offer)=>{
+        if (offerState.current) return
+        offerState.current = true
+
+        console.log("offer", offer)
+        await addShit()
+
+        await peerConnection.setRemoteDescription(offer)
+        await addICE()
+
+        //Generating the answer SDP
+        const answer = await peerConnection.createAnswer()
+        await peerConnection.setLocalDescription(answer)
+        socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
+
+    }
+
+    //Handling on getting the answer
+    const handleAnswer=async (answer)=>{
+        if (answerState.current) return
+        answerState.current = true
+
+        console.log("answer", answer)
+
+        await peerConnection.setRemoteDescription(answer)
+        await addICE()
+    }
     //Getting the user stream at first
     useEffect(() => {
         offerState.current = false
         answerState.current = false
 
         // Adding the new ICE Candidate
-        socket.on("ice", async (candidate) => {
-            try {
-                if (candidate) {
-                    if (!peerConnection.remoteDescription) {
-                        setIce(prev => [...prev, candidate]);
-                        console.log("Remote description not set yet, candidate saved");
-                        // return;
-                    }
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-                    console.log("ICE candidate added successfully");
-                }
-            } catch (error) {
-                console.error("Error adding received ICE candidate:", error);
-            }
-        });
-
+        socket.on("ice", handleICE);
 
         peerConnection.onconnectionstatechange = () => {
             console.log("Connection state:", peerConnection.connectionState);
@@ -92,40 +143,13 @@ const Room = () => {
         })
 
         //Getting the offer from the one peer and generating the answer
-        socket.on("send_offer", async (offer) => {
-            if (offerState.current) return
-            offerState.current = true
-
-            await addShit()
-
-            await peerConnection.setRemoteDescription(offer)
-            ice.map(candidate => {
-                peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
-                    .catch(e => console.error("Failed to add ICE candidate:", e));
-            });
-
-
-
-            //Generating the answer SDP
-            const answer = await peerConnection.createAnswer()
-            await peerConnection.setLocalDescription(answer)
-            socket.emit("answer", { answer: peerConnection.localDescription, roomId: id })
-
-        })
+        socket.on("send_offer",handleOffer)
 
 
         //Getting the answer from the remote peer
-        socket.on("send_answer", async (answer) => {
-            if (answerState.current) return
-            answerState.current = true
+        socket.on("send_answer",handleAnswer)
 
-            await peerConnection.setRemoteDescription(answer)
-            ice.map(candidate => {
-                peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
-                    .catch(e => console.error("Failed to add ICE candidate:", e));
-            });
 
-        })
 
     }, [])
 
@@ -135,7 +159,6 @@ const Room = () => {
         const offer = await peerConnection.createOffer()
         await peerConnection.setLocalDescription(offer)
         socket.emit("offer", { offer, roomId: id })
-
     }
 
     return (

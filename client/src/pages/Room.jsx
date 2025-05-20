@@ -3,6 +3,11 @@ import { SocketContext } from "../../context/Socket";
 import { useContext } from "react";
 import { useParams } from 'react-router-dom'
 import { PeerContext } from "../../context/peerConnection";
+import { FaVideoSlash } from "react-icons/fa6";
+import { FaVideo } from "react-icons/fa6";
+import { FaMicrophone } from "react-icons/fa";
+import { FaMicrophoneSlash } from "react-icons/fa";
+import { IoCall } from "react-icons/io5";
 
 const Room = () => {
     const socket = useContext(SocketContext)
@@ -178,7 +183,17 @@ const Room = () => {
                 <section className="absolute bottom-0 w-full h-[120px] flex items-center justify-center">
                     <div className="bg-white/20 backdrop-blur-lg w-[40%] h-[60px] rounded-full flex items-center justify-center gap-3">
                         <button className="control-btn">
+                        <FaVideo />
+                        {/* <FaVideoSlash /> */}
+                        </button>
 
+                        <button className="control-btn">
+                        <FaMicrophone />
+                        {/* <FaMicrophoneSlash /> */}
+                        </button>
+
+                        <button className="control-btn">
+                        <IoCall />
                         </button>
                     </div>
                 </section>

@@ -4,7 +4,7 @@ import {io} from 'socket.io-client'
 export const SocketContext = createContext(null)
 
 export const SocketProvider = ({ children }) => {
-    const socket = io("http://localhost:1111")
+    const socket = io("https://webrtc-fvt3.onrender.com/")
     
     return (
         <SocketContext.Provider value={socket}>

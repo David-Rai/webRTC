@@ -4,13 +4,21 @@ const app = express();
 const { Server } = require("socket.io")
 const server = http.createServer(app)
 const PORT = process.env.PORT || 1111;
+const cors=require("cors")
 
 //middlewares
 app.use(express.json());
+app.use(cors({
+  origin:[
+    "https://david-webrtc.netlify.app","https://david-webRTC.netlify.app/"
+  ]
+}))
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173"
+    origin:[
+	    "https://david-webrtc.netlify.app","https://david-webRTC.netlify.app/"
+    ]
   }
 })
 

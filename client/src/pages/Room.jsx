@@ -181,7 +181,7 @@ const Room = () => {
 
                 {/* CONTROLS */}
                 <section className="absolute bottom-0 w-full h-[120px] flex items-center justify-center">
-                    <div className="bg-white/20 backdrop-blur-lg w-[40%] h-[60px] rounded-full flex items-center justify-center gap-3">
+                    <div className="bg-white/20 backdrop-blur-lg w-[60%] md:w-[50%] lg:w-[30%]  h-[60px] rounded-full flex items-center justify-center gap-3">
                         <button className="control-btn">
                         <FaVideo />
                         {/* <FaVideoSlash /> */}
@@ -192,7 +192,7 @@ const Room = () => {
                         {/* <FaMicrophoneSlash /> */}
                         </button>
 
-                        <button className="control-btn">
+                        <button className="control-btn bg-red-600">
                         <IoCall />
                         </button>
                     </div>

@@ -14,6 +14,31 @@ const Room = () => {
     const answerState = useRef(false)
     const [ice, setIce] = useState([])
 
+    const addShit = async () => {
+        console.log("adding the track")
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+
+        if (stream) {
+            stream.getTracks().forEach(track => {//add video,audio to peerConnection
+                peerConnection.addTrack(track, stream)
+            })
+        }
+
+        peerConnection.ontrack = async (e) => {
+            if (e.streams[0]) {
+                console.log("done")
+                remoteStreamRef.current.srcObject = e.streams[0];
+            }
+        }
+
+        //ICE candidate generation and sending to the remote user
+        peerConnection.onicecandidate = async (e) => {
+            if (e.candidate) {
+                socket.emit("ice", { candidate: e.candidate, roomId: id })
+            }
+        }
+
+    }
 
     //Getting the user stream at first
     useEffect(() => {
@@ -61,8 +86,6 @@ const Room = () => {
         }
         setMedias()
 
-
-
         //READY TO GOO FROM SDP
         socket.on("ready", (message) => {
             createOffer()
@@ -73,39 +96,7 @@ const Room = () => {
             if (offerState.current) return
             offerState.current = true
 
-            console.log("offer recieved")
-            // console.log(offer)
-
-
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-
-            if (stream) {
-                stream.getTracks().forEach(track => {//add video,audio to peerConnection
-                    peerConnection.addTrack(track, stream)
-                })
-            } else {
-                let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                streamRef.current.srcObject = currentStream
-
-                currentStream.getTracks().forEach(track => {//add video,audio to peerConnection
-                    peerConnection.addTrack(track, currentStream)
-                })
-
-            }
-
-            peerConnection.ontrack = async (e) => {
-                if (e.streams[0]) {
-                    console.log("done")
-                    remoteStreamRef.current.srcObject = e.streams[0];
-                }
-            }
-
-            //ICE candidate generation and sending to the remote user
-            peerConnection.onicecandidate = async (e) => {
-                if (e.candidate) {
-                    socket.emit("ice", { candidate: e.candidate, roomId: id })
-                }
-            }
+            await addShit()
 
             await peerConnection.setRemoteDescription(offer)
             ice.map(candidate => {
@@ -128,9 +119,6 @@ const Room = () => {
             if (answerState.current) return
             answerState.current = true
 
-            console.log("answer received ")
-            // console.log(answer)
-
             await peerConnection.setRemoteDescription(answer)
             ice.map(candidate => {
                 peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
@@ -143,36 +131,7 @@ const Room = () => {
 
     //Creating the offer
     const createOffer = async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-
-        if (stream) {
-            stream.getTracks().forEach(track => {//add video,audio to peerConnection
-                peerConnection.addTrack(track, stream)
-            })
-        } else {
-            let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-            streamRef.current.srcObject = currentStream
-
-            currentStream.getTracks().forEach(track => {//add video,audio to peerConnection
-                peerConnection.addTrack(track, currentStream)
-            })
-
-        }
-
-        peerConnection.ontrack = async (e) => {
-            if (e.streams[0]) {
-                console.log("done")
-                remoteStreamRef.current.srcObject = e.streams[0];
-            }
-        }
-
-        //ICE candidate generation and sending to the remote user
-        peerConnection.onicecandidate = async (e) => {
-            if (e.candidate) {
-                socket.emit("ice", { candidate: e.candidate, roomId: id })
-            }
-        }
-
+        await addShit()
         const offer = await peerConnection.createOffer()
         await peerConnection.setLocalDescription(offer)
         socket.emit("offer", { offer, roomId: id })

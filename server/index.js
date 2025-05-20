@@ -4,20 +4,22 @@ const app = express();
 const { Server } = require("socket.io")
 const server = http.createServer(app)
 const PORT = process.env.PORT || 1111;
-const cors=require("cors")
+const cors = require("cors")
 
 //middlewares
 app.use(express.json());
 app.use(cors({
-  origin:[
-    "https://david-webrtc.netlify.app","https://david-webRTC.netlify.app/"
+  origin: [
+    "https://david-webrtc.netlify.app", "https://david-webRTC.netlify.app/"
+    , "http://localhost:5173/", "http://localhost:5173"
   ]
 }))
 
 const io = new Server(server, {
   cors: {
-    origin:[
-	    "https://david-webrtc.netlify.app","https://david-webRTC.netlify.app/"
+    origin: [
+      "https://david-webrtc.netlify.app", "https://david-webRTC.netlify.app/",
+      , "http://localhost:5173/", "http://localhost:5173"
     ]
   }
 })
@@ -52,21 +54,21 @@ io.on("connection", (client) => {
   })
 
   //Getting the SDP offer
-  client.on("offer",({offer,roomId})=>{
+  client.on("offer", ({ offer, roomId }) => {
     console.log("offered")
-  client.to(roomId).emit("send_offer",offer)
+    client.to(roomId).emit("send_offer", offer)
   })
 
   //Getting the SDP answer
-  client.on("answer",({answer,roomId})=>{
+  client.on("answer", ({ answer, roomId }) => {
     console.log("answered")
-   client.to(roomId).emit("send_answer",answer)
-  }) 
+    client.to(roomId).emit("send_answer", answer)
+  })
 
   //Getting the new ice Candidate
-  client.on("ice",({candidate,roomId})=>{
+  client.on("ice", ({ candidate, roomId }) => {
     // console.log("ice",candidate)
-    client.to(roomId).emit("ice",candidate)
+    client.to(roomId).emit("ice", candidate)
   })
 
 })

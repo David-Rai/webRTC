@@ -7,6 +7,9 @@
     .btn{
         @apply px-4 h-[40px] w-[160px] rounded-md text-white;
     }
+    .control-btn{
+        @apply h-[50px] w-[50px] bg-white rounded-full;
+    }
 }
 
 @tailwind utilities;

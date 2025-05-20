@@ -17,20 +17,20 @@ const Room = () => {
 
     //Add the ICE Candidate when remoteDescription is set
     useEffect(() => {
-            if (
-                peerConnection.remoteDescription &&
-                peerConnection.remoteDescription.type &&
-                ice.length > 0
-            ) {
-                console.log("📥 Flushing buffered ICE candidates");
-                addICE();
-                setIce([]); // Clear after adding
-            }
-    
+        if (
+            peerConnection.remoteDescription &&
+            peerConnection.remoteDescription.type &&
+            ice.length > 0
+        ) {
+            console.log("📥 Flushing buffered ICE candidates");
+            addICE();
+            setIce([]); // Clear after adding
+        }
+
         // return () => clearInterval(interval);
     }, [ice, peerConnection.remoteDescription]);
 
-    
+
     //Adding the remote track to the peer instance
     const addShit = async () => {
         console.log("adding the track")
@@ -64,9 +64,9 @@ const Room = () => {
             setIce(prev => [...prev, candidate]);
         }
     };
-    
+
     //Adding the ICE candidate
-    const addICE=async ()=>{
+    const addICE = async () => {
         for (const candidate of ice) {
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
@@ -75,11 +75,11 @@ const Room = () => {
                 console.error("❌ Error adding ICE:", e);
             }
         }
-        
+
     }
 
     //Handling on getting the offer
-    const handleOffer=async (offer)=>{
+    const handleOffer = async (offer) => {
         if (offerState.current) return
         offerState.current = true
 
@@ -97,7 +97,7 @@ const Room = () => {
     }
 
     //Handling on getting the answer
-    const handleAnswer=async (answer)=>{
+    const handleAnswer = async (answer) => {
         if (answerState.current) return
         answerState.current = true
 
@@ -106,7 +106,7 @@ const Room = () => {
         await peerConnection.setRemoteDescription(answer)
         await addICE()
     }
-    
+
     //Getting the user stream at first
     useEffect(() => {
         offerState.current = false
@@ -144,11 +144,11 @@ const Room = () => {
         })
 
         //Getting the offer from the one peer and generating the answer
-        socket.on("send_offer",handleOffer)
+        socket.on("send_offer", handleOffer)
 
 
         //Getting the answer from the remote peer
-        socket.on("send_answer",handleAnswer)
+        socket.on("send_answer", handleAnswer)
 
 
 
@@ -166,7 +166,22 @@ const Room = () => {
         <>
             <main className="h-screen w-full bg-primary_bg">
                 <video autoPlay playsInline ref={remoteStreamRef} className="h-screen w-full"></video>
-                <video autoPlay playsInline ref={streamRef} className="h-[200px] z-20 w-[200px] absolute top-2 left-2 rounded-md"></video>
+                <video
+                    autoPlay
+                    playsInline
+                    ref={streamRef}
+                    className="h-[200px] z-20 w-[200px] absolute top-3 left-2 rounded-3xl object-cover scale-x-[-1] border-4 border-white"
+                />
+
+
+                {/* CONTROLS */}
+                <section className="absolute bottom-0 w-full h-[120px] flex items-center justify-center">
+                    <div className="bg-white/20 backdrop-blur-lg w-[40%] h-[60px] rounded-full flex items-center justify-center gap-3">
+                        <button className="control-btn">
+
+                        </button>
+                    </div>
+                </section>
             </main>
         </>
     )

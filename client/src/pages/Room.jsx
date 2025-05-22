@@ -18,6 +18,7 @@ const Room = () => {
     const offerState = useRef(false)
     const answerState = useRef(false)
     const [ice, setIce] = useState([])
+    const localStream=useRef(null)
 
 
     //Add the ICE Candidate when remoteDescription is set
@@ -116,6 +117,7 @@ const Room = () => {
     useEffect(() => {
         offerState.current = false
         answerState.current = false
+        localStream.current=null
 
         // Adding the new ICE Candidate
         socket.on("ice", handleICE);
@@ -140,6 +142,7 @@ const Room = () => {
         async function setMedias() {
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             streamRef.current.srcObject = currentStream
+            localStream.current=currentStream
         }
         setMedias()
 
@@ -167,6 +170,18 @@ const Room = () => {
         socket.emit("offer", { offer, roomId: id })
     }
 
+    //Handling the stop video
+    const handleVideoStop = async () => {
+        const videoStream = localStream.current.getVideoTracks()[0]
+
+
+        console.log(peerConnection.getTracks())
+
+        if (videoStream.enabled) {
+                    videoStream.stop()
+                    videoStream.enabled = false
+        }
+    }
     return (
         <>
             <main className="h-screen w-full bg-primary_bg">
@@ -182,18 +197,18 @@ const Room = () => {
                 {/* CONTROLS */}
                 <section className="absolute bottom-0 w-full h-[120px] flex items-center justify-center">
                     <div className="bg-white/20 backdrop-blur-lg w-[60%] md:w-[50%] lg:w-[30%]  h-[60px] rounded-full flex items-center justify-center gap-3">
-                        <button className="control-btn">
-                        <FaVideo />
-                        {/* <FaVideoSlash /> */}
+                        <button className="control-btn" onClick={handleVideoStop}>
+                            <FaVideo />
+                            {/* <FaVideoSlash /> */}
                         </button>
 
                         <button className="control-btn">
-                        <FaMicrophone />
-                        {/* <FaMicrophoneSlash /> */}
+                            <FaMicrophone />
+                            {/* <FaMicrophoneSlash /> */}
                         </button>
 
                         <button className="control-btn bg-red-600">
-                        <IoCall />
+                            <IoCall />
                         </button>
                     </div>
                 </section>

@@ -71,6 +71,17 @@ io.on("connection", (client) => {
     client.to(roomId).emit("ice", candidate)
   })
 
+  // //Closing the video call
+  // client.on("cut",({roomId})=>{
+  //   client.to(roomId).emit("cut","cutting the webRTC connection")
+  // })
+
+  //Leaving the room
+  client.on("leave",({roomId})=>{
+    client.leave(roomId)
+    client.to(roomId).emit("leave","someone leaved")
+  })
+
 })
 
 //EXPRESS ROUTING

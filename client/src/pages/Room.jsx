@@ -8,6 +8,8 @@ import { FaVideo } from "react-icons/fa6";
 import { FaMicrophone } from "react-icons/fa";
 import { FaMicrophoneSlash } from "react-icons/fa";
 import { IoCall } from "react-icons/io5";
+import waitingGif from '../assets/wait.gif'
+import { useNavigate } from "react-router-dom";
 
 const Room = () => {
     const socket = useContext(SocketContext)
@@ -18,7 +20,9 @@ const Room = () => {
     const offerState = useRef(false)
     const answerState = useRef(false)
     const [ice, setIce] = useState([])
-    const localStream=useRef(null)
+    const localStream = useRef(null)
+    const navigate = useNavigate()
+    const [isRemote, setIsRemote] = useState(false)
 
 
     //Add the ICE Candidate when remoteDescription is set
@@ -89,6 +93,8 @@ const Room = () => {
         if (offerState.current) return
         offerState.current = true
 
+        setIsRemote(true)
+
         console.log("offer", offer)
         await addShit()
 
@@ -117,7 +123,7 @@ const Room = () => {
     useEffect(() => {
         offerState.current = false
         answerState.current = false
-        localStream.current=null
+        localStream.current = null
 
         // Adding the new ICE Candidate
         socket.on("ice", handleICE);
@@ -142,7 +148,7 @@ const Room = () => {
         async function setMedias() {
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
             streamRef.current.srcObject = currentStream
-            localStream.current=currentStream
+            localStream.current = currentStream
         }
         setMedias()
 
@@ -158,6 +164,8 @@ const Room = () => {
         //Getting the answer from the remote peer
         socket.on("send_answer", handleAnswer)
 
+        //Cutting the connection
+        socket.on("leave", handlePeerLeave)
 
 
     }, [])
@@ -165,27 +173,62 @@ const Room = () => {
     //Creating the offer
     const createOffer = async () => {
         await addShit()
+        setIsRemote(true)
         const offer = await peerConnection.createOffer()
         await peerConnection.setLocalDescription(offer)
         socket.emit("offer", { offer, roomId: id })
     }
 
     //Handling the stop video
-    const handleVideoStop = async () => {
-        const videoStream = localStream.current.getVideoTracks()[0]
+    const handlePeerLeave = async (message) => {
+        console.log("disconnecting")
+        //Stoping the local stream
+        streamRef.current.srcObject.getTracks().forEach(track => {
+            track.stop()
+        })
 
+        //Stoping the remote stream
+        remoteStreamRef.current.srcObject.getTracks().forEach(track => {
+            track.stop()
+        })
 
-        console.log(peerConnection.getTracks())
-
-        if (videoStream.enabled) {
-                    videoStream.stop()
-                    videoStream.enabled = false
+        if (peerConnection) {
+            peerConnection.close()
         }
+        navigate("/")
+    }
+    const cut = () => {
+        console.log("disconnecting")
+        //Stoping the local stream
+        streamRef.current.srcObject.getTracks().forEach(track => {
+            track.stop()
+        })
+
+        //Stoping the remote stream
+        remoteStreamRef.current.srcObject.getTracks().forEach(track => {
+            track.stop()
+        })
+
+        if (peerConnection) {
+            peerConnection.close()
+        }
+        navigate("/")
+        socket.emit("leave", { roomId: id })
     }
     return (
         <>
             <main className="h-screen w-full bg-primary_bg">
-                <video autoPlay playsInline ref={remoteStreamRef} className="h-screen w-full"></video>
+                {
+                    isRemote ? (
+                        <video autoPlay playsInline ref={remoteStreamRef} className="h-screen w-full"></video>
+                    )
+                        :
+                        (
+                            <div className="h-screen flex items-center justify-center w-full">
+                                <img src={waitingGif} className="rounded-lg" />
+                            </div>
+                        )
+                }
                 <video
                     autoPlay
                     playsInline
@@ -197,7 +240,7 @@ const Room = () => {
                 {/* CONTROLS */}
                 <section className="absolute bottom-0 w-full h-[120px] flex items-center justify-center">
                     <div className="bg-white/20 backdrop-blur-lg w-[60%] md:w-[50%] lg:w-[30%]  h-[60px] rounded-full flex items-center justify-center gap-3">
-                        <button className="control-btn" onClick={handleVideoStop}>
+                        <button className="control-btn">
                             <FaVideo />
                             {/* <FaVideoSlash /> */}
                         </button>
@@ -208,7 +251,7 @@ const Room = () => {
                         </button>
 
                         <button className="control-btn bg-red-600">
-                            <IoCall />
+                            <IoCall onClick={cut} />
                         </button>
                     </div>
                 </section>

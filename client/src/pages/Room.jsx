@@ -101,7 +101,6 @@ const Room = () => {
     const handleOffer = async (offer) => {
         if (!peerConnection) return
 
-
         if (offerState.current) return
         offerState.current = true
 
@@ -289,6 +288,8 @@ const Room = () => {
             peerConnection.addTrack(newTrack, stream);
             console.log(newTrack)
 
+            //Generating the new offer for renogiation
+            createOffer()
 
             socket.emit("redo-stop-video", { roomId: id })
         }

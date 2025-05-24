@@ -152,6 +152,7 @@ const Room = () => {
                         break;
                     case "disconnected":
                     case "failed":
+                        handlePeerLeave()
                         console.log("⚠️ Peers are disconnected or connection failed");
                         break;
                     case "closed":

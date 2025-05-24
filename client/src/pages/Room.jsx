@@ -245,22 +245,30 @@ const Room = () => {
 
     const EndRTC = () => {
         console.log("disconnecting")
-        //Stoping the local stream
-        streamRef.current.srcObject.getTracks().forEach(track => {
-            track.stop()
-        })
 
-        //Stoping the remote stream
-        remoteStreamRef.current.srcObject.getTracks().forEach(track => {
-            track.stop()
-        })
+        navigate("/")
+
+        if (!peerConnection) return
+
 
         if (peerConnection) {
             setPeerConnection(null)
             peerConnection.close()
             createConnection()
         }
-        navigate("/")
+
+        //Stoping the local stream
+        streamRef.current.srcObject.getTracks().forEach(track => {
+            track.stop()
+        })
+
+        if (remoteStreamRef.current.srcObject) {
+            //Stoping the remote stream
+            remoteStreamRef.current.srcObject.getTracks().forEach(track => {
+                track.stop()
+            })
+        }
+
         socket.emit("leave", { roomId: id })
     }
 
@@ -305,11 +313,24 @@ const Room = () => {
         console.log("stoping the audio")
 
         if (what === "stop") {
-         peerConnection.getSenders().forEach(sender =>{
-            if(sender.track && sender.track.kind ==="audio"){
-                peerConnection.removeTrack(sender)
-            }
-         })
+        setStopAudio(true)
+            peerConnection.getSenders().forEach(sender => {
+                if (sender.track && sender.track.kind === "audio") {
+                    peerConnection.removeTrack(sender)
+                }
+            })
+        }
+
+        if(what==="redo"){
+            setStopAudio(false)
+                       //getting the video stream
+                       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                       const newTrack = stream.getAudioTracks()[0]; // or getAudioTracks()[0]
+                       peerConnection.addTrack(newTrack, stream);
+                       console.log(newTrack)
+           
+                       //Generating the new offer for renogiation
+                       createOffer()
         }
     }
 
@@ -353,7 +374,7 @@ const Room = () => {
                         <button className="control-btn">
                             {
                                 isStopAudio ? (
-                                    <FaMicrophoneSlash onClick={() => stopAudio("stop")} />
+                                    <FaMicrophoneSlash onClick={() => stopAudio("redo")} />
                                 )
                                     :
                                     (

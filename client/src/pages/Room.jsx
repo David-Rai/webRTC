@@ -256,7 +256,7 @@ const Room = () => {
                         :
                         (
                             <div className="h-screen flex items-center justify-center w-full">
-                                <img src={waitingGif} className="rounded-lg" />
+                                <img src={waitingGif} className="rounded-lg h-[60%]" />
                             </div>
                         )
                 }

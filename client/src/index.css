@@ -1,6 +1,9 @@
 @tailwind base;
 @tailwind components;
 @layer components{
+    *{
+        @apply font-primary_font
+    }
     .input{
         @apply border-[1px] border-black pl-2 rounded-md h-[40px] w-[260px];
     }

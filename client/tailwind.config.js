@@ -8,6 +8,9 @@ export default {
     extend: {
       colors:{
         primary_bg:"#262525"
+      },
+      fontFamily:{
+      primary_font:"Roboto"
       }
     },
   },

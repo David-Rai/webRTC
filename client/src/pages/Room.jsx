@@ -13,7 +13,8 @@ import { useNavigate } from "react-router-dom";
 
 const Room = () => {
     const socket = useContext(SocketContext)
-    const peerConnection = useContext(PeerContext)
+    const peer = useContext(PeerContext)
+    let {peerConnection,setPeerConnection,createConnection}=peer
     const { id } = useParams()
     const streamRef = useRef(null)
     const remoteStreamRef = useRef(null)
@@ -27,6 +28,9 @@ const Room = () => {
 
     //Add the ICE Candidate when remoteDescription is set
     useEffect(() => {
+        if(!peerConnection){
+            return
+        }
         if (
             peerConnection.remoteDescription &&
             peerConnection.remoteDescription.type &&
@@ -37,12 +41,12 @@ const Room = () => {
             setIce([]); // Clear after adding
         }
 
-        // return () => clearInterval(interval);
-    }, [ice, peerConnection.remoteDescription]);
+    }, [ice,peerConnection && peerConnection.remoteDescription]);
 
 
     //Adding the remote track to the peer instance
     const addShit = async () => {
+        if (!peerConnection) return
         console.log("adding the track")
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
 
@@ -68,6 +72,8 @@ const Room = () => {
     }
     //Handling the candidate
     const handleICE = async (candidate) => {
+        if (!peerConnection) return
+
         try {
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (error) {
@@ -77,6 +83,8 @@ const Room = () => {
 
     //Adding the ICE candidate
     const addICE = async () => {
+        if (!peerConnection) return
+
         for (const candidate of ice) {
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
@@ -90,6 +98,9 @@ const Room = () => {
 
     //Handling on getting the offer
     const handleOffer = async (offer) => {
+        if (!peerConnection) return
+
+
         if (offerState.current) return
         offerState.current = true
 
@@ -110,6 +121,8 @@ const Room = () => {
 
     //Handling on getting the answer
     const handleAnswer = async (answer) => {
+        if (!peerConnection) return
+
         if (answerState.current) return
         answerState.current = true
 
@@ -128,6 +141,8 @@ const Room = () => {
         // Adding the new ICE Candidate
         socket.on("ice", handleICE);
 
+        if(peerConnection){
+
         peerConnection.onconnectionstatechange = () => {
             console.log("Connection state:", peerConnection.connectionState);
 
@@ -144,6 +159,7 @@ const Room = () => {
                     break;
             }
         }
+    }
 
         async function setMedias() {
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
@@ -160,7 +176,6 @@ const Room = () => {
         //Getting the offer from the one peer and generating the answer
         socket.on("send_offer", handleOffer)
 
-
         //Getting the answer from the remote peer
         socket.on("send_answer", handleAnswer)
 
@@ -168,10 +183,20 @@ const Room = () => {
         socket.on("leave", handlePeerLeave)
 
 
+        return () => {
+            socket.off("ice", handleICE);
+            socket.off("send_offer", handleOffer);
+            socket.off("send_answer", handleAnswer);
+            socket.off("leave", handlePeerLeave);
+          };
+          
+
     }, [])
 
     //Creating the offer
     const createOffer = async () => {
+        if (!peerConnection) return
+
         await addShit()
         setIsRemote(true)
         const offer = await peerConnection.createOffer()
@@ -181,7 +206,7 @@ const Room = () => {
 
     //Handling the stop video
     const handlePeerLeave = async (message) => {
-        console.log("disconnecting")
+        console.log("you need to disconnecting")
         //Stoping the local stream
         streamRef.current.srcObject.getTracks().forEach(track => {
             track.stop()
@@ -194,10 +219,13 @@ const Room = () => {
 
         if (peerConnection) {
             peerConnection.close()
+            setPeerConnection(null)
+            createConnection()
         }
         navigate("/")
     }
-    const cut = () => {
+
+    const EndRTC = () => {
         console.log("disconnecting")
         //Stoping the local stream
         streamRef.current.srcObject.getTracks().forEach(track => {
@@ -210,11 +238,14 @@ const Room = () => {
         })
 
         if (peerConnection) {
+            setPeerConnection(null)
             peerConnection.close()
+            createConnection()
         }
         navigate("/")
         socket.emit("leave", { roomId: id })
     }
+
     return (
         <>
             <main className="h-screen w-full bg-primary_bg">
@@ -251,7 +282,7 @@ const Room = () => {
                         </button>
 
                         <button className="control-btn bg-red-600">
-                            <IoCall onClick={cut} />
+                            <IoCall onClick={EndRTC} />
                         </button>
                     </div>
                 </section>

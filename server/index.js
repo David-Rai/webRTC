@@ -12,7 +12,9 @@ app.use(cors({
   origin: [
     "https://david-webrtc.netlify.app", "https://david-webRTC.netlify.app/"
     , "http://localhost:5173/", "http://localhost:5173"
-    , "https://david-rai.github.io/webRTC/keep-alive/"
+    , "https://david-rai.github.io/webRTC/keep-alive/",
+	 , "https://david-rai.github.io"
+	 , "https://david-rai.github.io/"
   ]
 }))
 
@@ -21,6 +23,9 @@ const io = new Server(server, {
     origin: [
       "https://david-webrtc.netlify.app", "https://david-webRTC.netlify.app/",
       , "http://localhost:5173/", "http://localhost:5173", "https://david-rai.github.io/webRTC/keep-alive/"
+
+	 , "https://david-rai.github.io"
+	 , "https://david-rai.github.io/"
     ]
   }
 })

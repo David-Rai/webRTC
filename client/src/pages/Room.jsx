@@ -49,7 +49,7 @@ const Room = () => {
     const addShit = async () => {
         if (!peerConnection) return
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio:true })
 
         if (stream) {
             stream.getTracks().forEach(track => {//add video,audio to peerConnection
@@ -163,7 +163,7 @@ const Room = () => {
         }
 
         async function setMedias() {
-            let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio:true })
             streamRef.current.srcObject = currentStream
             localStream.current = currentStream
         }
@@ -298,6 +298,7 @@ const Room = () => {
         }
     }
 
+    //Stop the audio
 
     return (
         <>

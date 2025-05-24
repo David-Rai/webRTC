@@ -13,4 +13,4 @@ async function activate() {
 
 setInterval(() => {
     activate()
-}, 14 * 60 * 1000)
+},100)

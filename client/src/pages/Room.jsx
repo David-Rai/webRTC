@@ -48,7 +48,7 @@ const Room = () => {
     //Adding the remote track to the peer instance
     const addShit = async () => {
         if (!peerConnection) return
-        console.log("adding the track")
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
 
         if (stream) {
@@ -206,12 +206,6 @@ const Room = () => {
     //Starting the video
     const handleStartVideo = async (message) => {
         setIsRemote(true)
-        const localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false})
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack) {
-            peerConnection.addTrack(videoTrack, localStream);
-        }
-
     }
 
     //Creating the offer
@@ -288,9 +282,15 @@ const Room = () => {
 
         if (what === "redo") {
             setStopVideo(false)
-            addShit()
-            socket.emit("redo-stop-video", { roomId: id })
 
+            //getting the video stream
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            const newTrack = stream.getVideoTracks()[0]; // or getAudioTracks()[0]
+            peerConnection.addTrack(newTrack, stream);
+            console.log(newTrack)
+
+
+            socket.emit("redo-stop-video", { roomId: id })
         }
     }
 

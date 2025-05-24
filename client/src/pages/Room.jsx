@@ -25,6 +25,7 @@ const Room = () => {
     const navigate = useNavigate()
     const [isRemote, setIsRemote] = useState(false)
     const [isStopVideo, setStopVideo] = useState(false)
+    const [isStopAudio, setStopAudio] = useState(false)
 
 
     //Add the ICE Candidate when remoteDescription is set
@@ -49,7 +50,7 @@ const Room = () => {
     const addShit = async () => {
         if (!peerConnection) return
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio:true })
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
 
         if (stream) {
             stream.getTracks().forEach(track => {//add video,audio to peerConnection
@@ -163,7 +164,7 @@ const Room = () => {
         }
 
         async function setMedias() {
-            let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio:true })
+            let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             streamRef.current.srcObject = currentStream
             localStream.current = currentStream
         }
@@ -299,6 +300,18 @@ const Room = () => {
     }
 
     //Stop the audio
+    const stopAudio = async (what) => {
+        if (!peerConnection) return
+        console.log("stoping the audio")
+
+        if (what === "stop") {
+         peerConnection.getSenders().forEach(sender =>{
+            if(sender.track && sender.track.kind ==="audio"){
+                peerConnection.removeTrack(sender)
+            }
+         })
+        }
+    }
 
     return (
         <>
@@ -338,8 +351,15 @@ const Room = () => {
                         </button>
 
                         <button className="control-btn">
-                            <FaMicrophone />
-                            {/* <FaMicrophoneSlash /> */}
+                            {
+                                isStopAudio ? (
+                                    <FaMicrophoneSlash onClick={() => stopAudio("stop")} />
+                                )
+                                    :
+                                    (
+                                        <FaMicrophone onClick={() => stopAudio("stop")} />
+                                    )
+                            }
                         </button>
 
                         <button className="control-btn bg-red-600">

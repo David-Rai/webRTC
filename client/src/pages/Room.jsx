@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 const Room = () => {
     const socket = useContext(SocketContext)
     const peer = useContext(PeerContext)
-    let {peerConnection,setPeerConnection,createConnection}=peer
+    let { peerConnection, setPeerConnection, createConnection } = peer
     const { id } = useParams()
     const streamRef = useRef(null)
     const remoteStreamRef = useRef(null)
@@ -24,11 +24,12 @@ const Room = () => {
     const localStream = useRef(null)
     const navigate = useNavigate()
     const [isRemote, setIsRemote] = useState(false)
+    const [isStopVideo, setStopVideo] = useState(false)
 
 
     //Add the ICE Candidate when remoteDescription is set
     useEffect(() => {
-        if(!peerConnection){
+        if (!peerConnection) {
             return
         }
         if (
@@ -41,7 +42,7 @@ const Room = () => {
             setIce([]); // Clear after adding
         }
 
-    }, [ice,peerConnection && peerConnection.remoteDescription]);
+    }, [ice, peerConnection && peerConnection.remoteDescription]);
 
 
     //Adding the remote track to the peer instance
@@ -141,25 +142,25 @@ const Room = () => {
         // Adding the new ICE Candidate
         socket.on("ice", handleICE);
 
-        if(peerConnection){
+        if (peerConnection) {
 
-        peerConnection.onconnectionstatechange = () => {
-            console.log("Connection state:", peerConnection.connectionState);
+            peerConnection.onconnectionstatechange = () => {
+                console.log("Connection state:", peerConnection.connectionState);
 
-            switch (peerConnection.connectionState) {
-                case "connected":
-                    console.log("✅ Peers are connected");
-                    break;
-                case "disconnected":
-                case "failed":
-                    console.log("⚠️ Peers are disconnected or connection failed");
-                    break;
-                case "closed":
-                    console.log("❌ Connection closed");
-                    break;
+                switch (peerConnection.connectionState) {
+                    case "connected":
+                        console.log("✅ Peers are connected");
+                        break;
+                    case "disconnected":
+                    case "failed":
+                        console.log("⚠️ Peers are disconnected or connection failed");
+                        break;
+                    case "closed":
+                        console.log("❌ Connection closed");
+                        break;
+                }
             }
         }
-    }
 
         async function setMedias() {
             let currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
@@ -182,16 +183,36 @@ const Room = () => {
         //Cutting the connection
         socket.on("leave", handlePeerLeave)
 
+        //someone is stopping the video share notification
+        socket.on("stopping-video", handleStopVideo)
+
+        socket.on("redo-stopping-video", handleStartVideo)
 
         return () => {
             socket.off("ice", handleICE);
             socket.off("send_offer", handleOffer);
             socket.off("send_answer", handleAnswer);
             socket.off("leave", handlePeerLeave);
-          };
-          
+        };
+
 
     }, [])
+
+    //Handling the stop video 
+    const handleStopVideo = async (message) => {
+        setIsRemote(false)
+    }
+
+    //Starting the video
+    const handleStartVideo = async (message) => {
+        setIsRemote(true)
+        const localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false})
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack) {
+            peerConnection.addTrack(videoTrack, localStream);
+        }
+
+    }
 
     //Creating the offer
     const createOffer = async () => {
@@ -246,6 +267,34 @@ const Room = () => {
         socket.emit("leave", { roomId: id })
     }
 
+    //Stop video or webCam
+    const stopVideo = async (what) => {
+        if (!peerConnection) return
+
+        if (what === "stop") {
+            console.log("stop the video right noew.")
+
+            setStopVideo(true)
+
+            //Removing the track
+            peerConnection.getSenders().forEach(sender => {
+                if (sender.track && sender.track.kind === 'video') {
+                    peerConnection.removeTrack(sender);
+                    socket.emit("stop-video", { roomId: id })
+                }
+            });
+            return
+        }
+
+        if (what === "redo") {
+            setStopVideo(false)
+            addShit()
+            socket.emit("redo-stop-video", { roomId: id })
+
+        }
+    }
+
+
     return (
         <>
             <main className="h-screen w-full bg-primary_bg">
@@ -272,8 +321,15 @@ const Room = () => {
                 <section className="absolute bottom-0 w-full h-[120px] flex items-center justify-center">
                     <div className="bg-white/20 backdrop-blur-lg w-[60%] md:w-[50%] lg:w-[30%]  h-[60px] rounded-full flex items-center justify-center gap-3">
                         <button className="control-btn">
-                            <FaVideo />
-                            {/* <FaVideoSlash /> */}
+                            {
+                                isStopVideo ? (
+                                    <FaVideoSlash onClick={() => stopVideo("redo")} />
+                                )
+                                    :
+                                    (
+                                        <FaVideo onClick={() => stopVideo("stop")} />
+                                    )
+                            }
                         </button>
 
                         <button className="control-btn">

@@ -12,7 +12,7 @@ app.use(cors({
   origin: [
     "https://david-webrtc.netlify.app", "https://david-webRTC.netlify.app/"
     , "http://localhost:5173/", "http://localhost:5173"
- ,"https://david-rai.github.io/webRTC/keep-alive/"
+    , "https://david-rai.github.io/webRTC/keep-alive/"
   ]
 }))
 
@@ -20,7 +20,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "https://david-webrtc.netlify.app", "https://david-webRTC.netlify.app/",
-      , "http://localhost:5173/", "http://localhost:5173","https://david-rai.github.io/webRTC/keep-alive/"
+      , "http://localhost:5173/", "http://localhost:5173", "https://david-rai.github.io/webRTC/keep-alive/"
     ]
   }
 })
@@ -77,11 +77,21 @@ io.on("connection", (client) => {
   // })
 
   //Leaving the room
-  client.on("leave",({roomId})=>{
+  client.on("leave", ({ roomId }) => {
     client.leave(roomId)
-    client.to(roomId).emit("leave","someone leaved")
+    client.to(roomId).emit("leave", "someone leaved")
   })
 
+  //Stoping the video sharing
+  client.on("stop-video", ({ roomId }) => {
+    client.to(roomId).emit("stopping-video", "your friend is stopping the video")
+  })
+
+  
+  //Starting video sharing
+  client.on("redo-stop-video", ({ roomId }) => {
+    client.to(roomId).emit("redo-stopping-video", "your friend is starrting the video")
+  })
 })
 
 //EXPRESS ROUTING

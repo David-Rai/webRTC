@@ -193,6 +193,8 @@ const Room = () => {
             socket.off("send_offer", handleOffer);
             socket.off("send_answer", handleAnswer);
             socket.off("leave", handlePeerLeave);
+            socket.off("stopping-video", handleStopVideo)
+            socket.off("redo-stopping-video", handleStartVideo)
         };
 
 

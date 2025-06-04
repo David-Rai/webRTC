@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 import { SocketContext } from '../context/Socket'
 import { useNavigate } from 'react-router-dom'
+import {toast} from "react-toastify"
 
 function App() {
   const socket = useContext(SocketContext)
@@ -16,6 +17,13 @@ function App() {
 
     socket.on('connect', () => {
       console.log("connected ", socket.id)
+      toast.success("connection establised")
+    })
+
+    //connnection error
+    socket.on("connect_error",err=>{
+      toast.error(err.message)
+      
     })
 
     //room created
